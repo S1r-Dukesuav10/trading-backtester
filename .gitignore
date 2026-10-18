@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment / secrets
+.env
+
+# Data & storage (never commit raw market data or databases)
+data/
+*.db
+*.sqlite
+
+# Node
+node_modules/
+dist/
+
+# Editors & OS
+.vscode/
+.DS_Store

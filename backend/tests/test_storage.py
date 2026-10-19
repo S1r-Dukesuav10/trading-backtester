@@ -8,21 +8,24 @@ import pandas as pd
 import pytest
 
 from app.data.local_file import LocalFileSource
+from app.data.schema import validate_candles
 from app.data.storage import candles_path, load_candles, save_candles
 
 
 def make_candles() -> pd.DataFrame:
-    return pd.DataFrame(
-        {
-            "timestamp": pd.to_datetime(
-                ["2026-03-10 09:00:00", "2026-03-10 09:01:00"], utc=True
-            ),
-            "open": [100.0, 101.0],
-            "high": [101.0, 102.0],
-            "low": [99.0, 100.0],
-            "close": [100.5, 101.5],
-            "volume": [10.0, 20.0],
-        }
+    return validate_candles(
+        pd.DataFrame(
+            {
+                "timestamp": pd.to_datetime(
+                    ["2026-03-10 09:00:00", "2026-03-10 09:01:00"], utc=True
+                ),
+                "open": [100.0, 101.0],
+                "high": [101.0, 102.0],
+                "low": [99.0, 100.0],
+                "close": [100.5, 101.5],
+                "volume": [10.0, 20.0],
+            }
+        )
     )
 
 

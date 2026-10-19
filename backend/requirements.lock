@@ -1,0 +1,25 @@
+# Exact, resolved dependency set for the trading backtester.
+#
+# Generated from the project's .venv with `python -m pip freeze`, so every
+# version here is one that has actually been installed and tested.
+#
+# backend/requirements.txt stays the loose, direct-dependency list.
+# Use this file when you want an identical environment:
+#     .venv\Scripts\python.exe -m pip install -r backend\requirements.lock
+
+# --- direct dependencies (see backend/requirements.txt) ---
+numpy==2.5.4
+pandas==3.0.6
+pyarrow==26.0.0
+pytest==9.1.1
+ruff==0.17.1
+
+# --- transitive dependencies (pulled in by the above) ---
+colorama==0.4.6
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+python-dateutil==2.9.0.post0
+six==1.17.0
+tzdata==2026.5

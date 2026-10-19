@@ -7,6 +7,7 @@ import pandas as pd
 from app.data import paths
 from app.data.cli import main
 from tests.test_binance_vision import FakeHttp, monthly_files
+from tests.test_dukascopy import FakeDukascopyCLI
 
 
 def test_fetch_binance_writes_canonical_parquet(tmp_path, capsys):
@@ -139,4 +140,113 @@ def test_fetch_binance_defaults_honor_env_dir(monkeypatch, tmp_path, capsys):
         / "BTCUSDT"
         / "1h"
         / "BTCUSDT-1h-2023-01.zip"
+    ).exists()
+
+
+# -- fetch-dukascopy ------------------------------------------------------
+
+
+def test_fetch_dukascopy_writes_month_files(tmp_path, capsys):
+    cli = FakeDukascopyCLI()
+
+    exit_code = main(
+        [
+            "fetch-dukascopy",
+            "--symbol",
+            "XAUUSD",
+            "--start",
+            "2024-01",
+            "--end",
+            "2024-03",
+            "--raw-root",
+            str(tmp_path),
+            "--delay",
+            "0",
+        ],
+        run=cli,
+    )
+
+    assert exit_code == 0
+    for month in ("2024-01", "2024-02", "2024-03"):
+        assert (tmp_path / "XAUUSD" / f"XAUUSD-m1-bid-{month}.csv").exists()
+
+    output = capsys.readouterr().out
+    assert "3 month(s) requested" in output
+    assert "downloaded: 3" in output
+    assert "first 5 rows of XAUUSD-m1-bid-2024-01.csv" in output
+    assert "last 3 rows of XAUUSD-m1-bid-2024-03.csv" in output
+
+
+def test_fetch_dukascopy_is_resumable(tmp_path, capsys):
+    cli = FakeDukascopyCLI()
+    args = [
+        "fetch-dukascopy",
+        "--symbol",
+        "XAUUSD",
+        "--start",
+        "2024-01",
+        "--end",
+        "2024-02",
+        "--raw-root",
+        str(tmp_path),
+        "--delay",
+        "0",
+    ]
+
+    assert main(args, run=cli) == 0
+    assert len(cli.commands) == 2
+
+    cli.commands.clear()
+    assert main(args, run=cli) == 0  # second run: everything cached
+
+    assert cli.commands == []
+    assert "already present: 2" in capsys.readouterr().out
+
+
+def test_fetch_dukascopy_reports_failures(tmp_path, capsys):
+    cli = FakeDukascopyCLI(fail_months={"2024-02"})
+
+    exit_code = main(
+        [
+            "fetch-dukascopy",
+            "--start",
+            "2024-01",
+            "--end",
+            "2024-02",
+            "--raw-root",
+            str(tmp_path),
+            "--delay",
+            "0",
+            "--retry-wait",
+            "0",
+        ],
+        run=cli,
+    )
+
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "FAILED 2024-02" in captured.out
+    assert "re-run to retry" in captured.err
+
+
+def test_fetch_dukascopy_defaults_honor_env_dir(monkeypatch, tmp_path):
+    monkeypatch.setenv(paths.ENV_DATA_DIR, str(tmp_path))
+    cli = FakeDukascopyCLI()
+
+    exit_code = main(
+        [
+            "fetch-dukascopy",
+            "--start",
+            "2024-01",
+            "--end",
+            "2024-01",
+            "--delay",
+            "0",
+        ],
+        run=cli,
+    )
+
+    assert exit_code == 0
+    assert (
+        tmp_path / "raw" / "dukascopy" / "XAUUSD" / "XAUUSD-m1-bid-2024-01.csv"
     ).exists()

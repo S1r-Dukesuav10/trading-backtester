@@ -7,7 +7,9 @@ __pycache__/
 .env
 
 # Data & storage (never commit raw market data or databases)
-data/
+# Root-anchored: only the top-level data/ dir, so source packages such as
+# backend/app/data/ are NOT ignored.
+/data/
 *.db
 *.sqlite
 
